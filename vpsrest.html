@@ -314,7 +314,8 @@
                 premium: '',
                 contactMethod: 'none',
                 contactInfo: '',
-                reviewUrl: ''
+                reviewUrl: '',
+                country: ''
             });
 
             const [result, setResult] = useState(null);
@@ -324,8 +325,21 @@
             const [loadingRate, setLoadingRate] = useState(false);
             const [error, setError] = useState('');
             const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+            const [countries, setCountries] = useState([]);
             const svgRef = useRef(null);
             const qrContainerRef = useRef(null);
+
+            // --- Load Countries Data ---
+            useEffect(() => {
+                fetch('https://gist.githubusercontent.com/mouse0232/5bb03394be98b6616692db1b1ca3ed46/raw/fc99e5b376901826b1f90fcd3a31c252b2d3e4b3/countries.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        // Sort by country code to ensure 'CN' is near the top
+                        const sorted = [...data].sort((a, b) => a.code.localeCompare(b.code));
+                        setCountries(sorted);
+                    })
+                    .catch(err => console.error('Failed to load countries', err));
+            }, []);
 
             // --- Multi-language Support ---
             // Detect browser language to determine if Chinese should be used
@@ -557,10 +571,16 @@
                     : (isZh ? contactOptions.find(o => o.value === formData.contactMethod)?.label : formData.contactMethod);
                 
                 // Markdown Content Construction
+                const countryData = countries.find(c => c.code === formData.country);
+                const countryDisplay = countryData 
+                    ? `${countryData.flag} ${isZh ? countryData.name_zh : countryData.name}` 
+                    : (isZh ? '-' : '-');
+
                 const mdContent = `# ${isZh ? 'VPS 剩余价值评估报告' : 'VPS Residual Value Assessment Report'}
 
 ## ${isZh ? '基本信息' : 'Basic Info'}
 - ${isZh ? '名称' : 'Name'}: ${formData.vpsName || '-'}
+- ${isZh ? '国家/地区' : 'Country/Region'}: ${countryDisplay}
 
 ## ${isZh ? '配置' : 'Configuration'}
 - ${isZh ? 'CPU' : 'CPU'}: ${formData.cores || '-'} C
@@ -634,6 +654,26 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                             placeholder="例如: AWS Lightsail Tokyo" 
                                             value={formData.vpsName}
                                             onChange={handleInputChange}
+                                        />
+                                    </InputContainer>
+                                </div>
+
+                                {/* Row 1.5: Country (Full width) */}
+                                <div className="grid grid-cols-12 gap-6">
+                                    <InputContainer className="col-span-12">
+                                        <Label icon={Globe}>{isZh ? "国家/地区" : "Country/Region"}</Label>
+                                        <Select 
+                                            name="country" 
+                                            options={[
+                                                { value: '', label: isZh ? "请选择国家" : "Select Country" },
+                                                ...countries.map(c => ({
+                                                    value: c.code,
+                                                    label: `${c.flag} ${isZh ? c.name_zh : c.name}`
+                                                }))
+                                            ]}
+                                            value={formData.country}
+                                            onChange={handleInputChange}
+                                            className="h-[52px]"
                                         />
                                     </InputContainer>
                                 </div>
@@ -934,6 +974,14 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                             <rect x="50" y="50" width="700" height="500" rx="40" stroke="rgba(0,0,0,0.05)" strokeWidth="2" fill="none" />
                             
                             <text x="100" y="120" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="32" fill="#1C1C1E">{formData.vpsName || '未命名 VPS'}</text>
+                            
+                            {/* Country Flag Emoji - Positioned on the right */}
+                            {formData.country && countries.length > 0 && (
+                                <text x="700" y="115" textAnchor="end" fontSize="36">
+                                    {countries.find(c => c.code === formData.country)?.flag || ''}
+                                </text>
+                            )}
+                            
                             <text x="100" y="150" fontFamily="Inter, sans-serif" fontSize="16" fill="#888">{labels.reportTitle}</text>
 
                             {/* Left Column - Configuration, Network, Subscription, Contact */}
