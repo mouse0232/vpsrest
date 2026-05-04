@@ -56,8 +56,8 @@
     <style>
         /* Custom Scrollbar for nicer aesthetic */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: transparent; 
@@ -68,6 +68,9 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #8E8E93; 
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
         }
         body {
             -webkit-font-smoothing: antialiased;
@@ -694,16 +697,16 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                                                 setFormData(prev => ({ ...prev, country: c.code }));
                                                                 setCountryDropdownOpen(false);
                                                             }}
-                                                            className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
+                                                            className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
                                                         >
                                                             <img 
                                                                 src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.svg`} 
                                                                 alt={c.name} 
-                                                                className="h-5 w-7 rounded-sm shadow-sm object-cover"
+                                                                className="h-4 w-6 rounded-sm shadow-sm object-cover flex-shrink-0"
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
-                                                            <span className="flex-1">{isZh ? c.name_zh : c.name}</span>
-                                                            {formData.country === c.code && <span className="text-blue-500">✓</span>}
+                                                            <span className="flex-1 text-[15px]">{isZh ? c.name_zh : c.name}</span>
+                                                            {formData.country === c.code && <span className="text-blue-500 text-sm">✓</span>}
                                                         </div>
                                                     ))}
                                                 </div>
