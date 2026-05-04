@@ -326,15 +326,32 @@
             const svgRef = useRef(null);
             const qrContainerRef = useRef(null);
 
+            // --- Multi-language Support ---
+            // Detect browser language to determine if Chinese should be used
+            const isZh = navigator.language && navigator.language.startsWith('zh');
+
+            const labels = {
+                reportTitle: isZh ? "剩余价值评估报告" : "Residual Value Assessment Report",
+                configuration: isZh ? "配置" : "CONFIGURATION",
+                network: isZh ? "网络" : "NETWORK",
+                subscription: isZh ? "订阅" : "SUBSCRIPTION",
+                contact: isZh ? "联系方式" : "CONTACT",
+                dates: isZh ? "日期" : "DATES",
+                start: isZh ? "开始:" : "Start:",
+                end: isZh ? "结束:" : "End:",
+                scanReview: isZh ? "👇扫码查看测评" : "👇 Scan to view review",
+                totalValue: isZh ? "总价值" : "TOTAL VALUE",
+            };
+
             // Constants
             const subscriptionOptions = [
-                { value: 'monthly', label: '月付' },
-                { value: 'quarterly', label: '季付' },
-                { value: 'semiannual', label: '半年付' },
-                { value: 'yearly', label: '年付' },
-                { value: 'biennial', label: '两年付' },
-                { value: 'triennial', label: '三年付' },
-                { value: 'quinquennial', label: '五年付' },
+                { value: 'monthly', label: '月付', labelEn: 'Monthly' },
+                { value: 'quarterly', label: '季付', labelEn: 'Quarterly' },
+                { value: 'semiannual', label: '半年付', labelEn: 'Semi-Annual' },
+                { value: 'yearly', label: '年付', labelEn: 'Annual' },
+                { value: 'biennial', label: '两年付', labelEn: '2-Year' },
+                { value: 'triennial', label: '三年付', labelEn: '3-Year' },
+                { value: 'quinquennial', label: '五年付', labelEn: '5-Year' },
             ];
 
             const currencyOptions = [
@@ -859,28 +876,28 @@
                             <rect x="50" y="50" width="700" height="500" rx="40" stroke="rgba(0,0,0,0.05)" strokeWidth="2" fill="none" />
                             
                             <text x="100" y="120" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="32" fill="#1C1C1E">{formData.vpsName || '未命名 VPS'}</text>
-                            <text x="100" y="150" fontFamily="Inter, sans-serif" fontSize="16" fill="#888">剩余价值评估报告</text>
+                            <text x="100" y="150" fontFamily="Inter, sans-serif" fontSize="16" fill="#888">{labels.reportTitle}</text>
 
                             {/* Left Column - Configuration, Network, Subscription, Contact */}
                             <g transform="translate(100, 200)">
-                                <text x="0" y="0" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">CONFIGURATION</text>
+                                <text x="0" y="0" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.configuration}</text>
                                 <text x="0" y="25" fontFamily="Inter, sans-serif" fontSize="18" fill="#333">
                                     {formData.cores || '-'} C / {formData.memory || '-'}{formData.memoryUnit} RAM / {formData.storage || '-'}{formData.storageUnit} SSD
                                 </text>
                                 
-                                <text x="0" y="60" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">NETWORK</text>
+                                <text x="0" y="60" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.network}</text>
                                 <text x="0" y="85" fontFamily="Inter, sans-serif" fontSize="18" fill="#333">
                                     {formData.bandwidth || '-'}{formData.bandwidthUnit} Bandwidth / {formData.isUnlimitedTraffic ? 'Unlimited' : (formData.traffic || '-') + formData.trafficUnit} Traffic
                                 </text>
 
-                                <text x="0" y="120" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">SUBSCRIPTION</text>
+                                <text x="0" y="120" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.subscription}</text>
                                 <text x="0" y="145" fontFamily="Inter, sans-serif" fontSize="18" fill="#333">
-                                    {formData.price} {formData.currency} / {subscriptionOptions.find(o => o.value === formData.subscriptionType)?.label}
+                                    {formData.price} {formData.currency} / {subscriptionOptions.find(o => o.value === formData.subscriptionType)?.[isZh ? 'label' : 'labelEn']}
                                 </text>
 
                                 {formData.contactMethod !== 'none' && (
                                     <>
-                                        <text x="0" y="180" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">CONTACT</text>
+                                        <text x="0" y="180" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.contact}</text>
                                         <text x="0" y="205" fontFamily="Inter, sans-serif" fontSize="16" fill="#555">
                                             {formData.contactMethod === 'tg' ? 'Telegram' : formData.contactMethod === 'wechat' ? 'WeChat' : 'Message'}: {formData.contactInfo}
                                         </text>
@@ -890,13 +907,13 @@
 
                             {/* Right Column - Dates and QR Code */}
                             <g transform="translate(450, 200)">
-                                <text x="0" y="0" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">DATES</text>
-                                <text x="0" y="25" fontFamily="Inter, sans-serif" fontSize="16" fill="#555">Start: {formData.startDate || '-'}</text>
-                                <text x="0" y="50" fontFamily="Inter, sans-serif" fontSize="16" fill="#555">End: {endDate || '-'}</text>
+                                <text x="0" y="0" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.dates}</text>
+                                <text x="0" y="25" fontFamily="Inter, sans-serif" fontSize="16" fill="#555">{labels.start} {formData.startDate || '-'}</text>
+                                <text x="0" y="50" fontFamily="Inter, sans-serif" fontSize="16" fill="#555">{labels.end} {endDate || '-'}</text>
                                 
                                 {formData.reviewUrl && qrCodeDataUrl && (
                                     <>
-                                        <text x="0" y="90" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">👇扫码查看测评</text>
+                                        <text x="0" y="90" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.scanReview}</text>
                                         <image 
                                             x="0" 
                                             y="105" 
@@ -910,7 +927,7 @@
 
                             <line x1="100" y1="440" x2="700" y2="440" stroke="#EEE" strokeWidth="2" />
 
-                            <text x="100" y="510" fontFamily="Inter, sans-serif" fontSize="14" fontWeight="bold" fill="#AAA" letterSpacing="2">TOTAL VALUE</text>
+                            <text x="100" y="510" fontFamily="Inter, sans-serif" fontSize="14" fontWeight="bold" fill="#AAA" letterSpacing="2">{labels.totalValue}</text>
                             
                             {/* Updated Result Display in SVG to include converted price */}
                             {result && (
