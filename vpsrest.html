@@ -539,31 +539,58 @@
 
             const saveImage = () => {
                 if (!svgRef.current) return;
-                const svgData = new XMLSerializer().serializeToString(svgRef.current);
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-                const url = URL.createObjectURL(svgBlob);
                 
-                img.onload = () => {
-                    const width = 800;
-                    const height = 600;
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.fillStyle = "#F2F2F7"; 
-                    ctx.fillRect(0,0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob((blob) => {
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = `VPS_Valuation_${formData.vpsName || 'Card'}.webp`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }, 'image/webp');
+                const exportCard = (flagBase64) => {
+                    let svgData = new XMLSerializer().serializeToString(svgRef.current);
+                    
+                    // If we have a Base64 flag, inject it into the SVG string to avoid CORS issues during export
+                    if (flagBase64) {
+                        const flagUrl = `https://flagcdn.com/${formData.country.toLowerCase()}.svg`;
+                        svgData = svgData.replace(flagUrl, flagBase64);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(svgBlob);
+                    
+                    img.onload = () => {
+                        const width = 800;
+                        const height = 600;
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.fillStyle = "#F2F2F7"; 
+                        ctx.fillRect(0,0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = `VPS_Valuation_${formData.vpsName || 'Card'}.webp`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }, 'image/webp');
+                    };
+                    img.src = url;
                 };
-                img.src = url;
+
+                // Pre-fetch flag as Base64 to ensure it renders in the exported image
+                if (formData.country) {
+                    const flagUrl = `https://flagcdn.com/${formData.country.toLowerCase()}.svg`;
+                    fetch(flagUrl)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                exportCard(reader.result); // reader.result contains "data:image/svg+xml;base64,..."
+                            };
+                            reader.readAsDataURL(blob);
+                        })
+                        .catch(() => exportCard(null)); // Fallback if fetch fails
+                } else {
+                    exportCard(null);
+                }
             };
 
             const saveMarkdown = () => {
@@ -576,7 +603,8 @@
                 
                 // Markdown Content Construction
                 const countryData = countries.find(c => c.code === formData.country);
-                const countryImgUrl = formData.country ? `https://flagcdn.com/w20/${formData.country.toLowerCase()}.svg` : null;
+                // Use 20x15 PNG for better Markdown compatibility and small size
+                const countryImgUrl = formData.country ? `https://flagcdn.com/20x15/${formData.country.toLowerCase()}.png` : null;
                 const countryDisplay = countryData 
                     ? `![${countryData.code}](${countryImgUrl}) ${isZh ? countryData.name_zh : countryData.name}` 
                     : (isZh ? '-' : '-');
@@ -675,7 +703,7 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                                 {formData.country ? (
                                                     <div className="flex items-center gap-3">
                                                         <img 
-                                                            src={`https://flagcdn.com/w20/${formData.country.toLowerCase()}.svg`} 
+                                                            src={`https://flagcdn.com/${formData.country.toLowerCase()}.svg`} 
                                                             alt="flag" 
                                                             className="h-5 w-7 rounded-sm shadow-sm object-cover"
                                                             onError={(e) => { e.target.style.display = 'none'; }}
@@ -700,11 +728,18 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                                             className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
                                                         >
                                                             <img 
-                                                                src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.svg`} 
+                                                                src={`https://flagcdn.com/${c.code.toLowerCase()}.svg`} 
                                                                 alt={c.name} 
-                                                                className="h-4 w-6 rounded-sm shadow-sm object-cover flex-shrink-0"
-                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                                loading="lazy"
+                                                                className="h-4 w-6 rounded-sm shadow-sm object-cover opacity-0 transition-opacity duration-300 flex-shrink-0"
+                                                                onLoad={(e) => e.target.style.opacity = 1}
+                                                                onError={(e) => { 
+                                                                    e.target.style.display = 'none'; 
+                                                                    const fallback = e.target.parentElement.querySelector('.flag-fallback');
+                                                                    if (fallback) fallback.style.display = 'inline';
+                                                                }}
                                                             />
+                                                            <span className="flag-fallback hidden text-[10px] font-bold text-gray-400 w-6 text-center">{c.code}</span>
                                                             <span className="flex-1 text-[15px]">{isZh ? c.name_zh : c.name}</span>
                                                             {formData.country === c.code && <span className="text-blue-500 text-sm">✓</span>}
                                                         </div>
@@ -1012,11 +1047,17 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                             
                             <text x="100" y="120" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="32" fill="#1C1C1E">{formData.vpsName || '未命名 VPS'}</text>
                             
-                            {/* Country Flag Emoji - Positioned on the right */}
+                            {/* Country Flag Image - Positioned on the right */}
                             {formData.country && countries.length > 0 && (
-                                <text x="700" y="115" textAnchor="end" fontSize="36">
-                                    {countries.find(c => c.code === formData.country)?.flag || ''}
-                                </text>
+                                <image 
+                                    x="660" 
+                                    y="85" 
+                                    width="40" 
+                                    height="27" 
+                                    href={`https://flagcdn.com/${formData.country.toLowerCase()}.svg`}
+                                    crossOrigin="anonymous"
+                                    preserveAspectRatio="xMidYMid meet"
+                                />
                             )}
                             
                             <text x="100" y="150" fontFamily="Inter, sans-serif" fontSize="16" fill="#888">{labels.reportTitle}</text>
