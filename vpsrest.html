@@ -326,6 +326,7 @@
             const [error, setError] = useState('');
             const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
             const [countries, setCountries] = useState([]);
+            const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
             const svgRef = useRef(null);
             const qrContainerRef = useRef(null);
 
@@ -572,8 +573,9 @@
                 
                 // Markdown Content Construction
                 const countryData = countries.find(c => c.code === formData.country);
+                const countryImgUrl = formData.country ? `https://flagcdn.com/w20/${formData.country.toLowerCase()}.svg` : null;
                 const countryDisplay = countryData 
-                    ? `${countryData.flag} ${isZh ? countryData.name_zh : countryData.name}` 
+                    ? `![${countryData.code}](${countryImgUrl}) ${isZh ? countryData.name_zh : countryData.name}` 
                     : (isZh ? '-' : '-');
 
                 const mdContent = `# ${isZh ? 'VPS 剩余价值评估报告' : 'VPS Residual Value Assessment Report'}
@@ -661,20 +663,52 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                 {/* Row 1.5: Country (Full width) */}
                                 <div className="grid grid-cols-12 gap-6">
                                     <InputContainer className="col-span-12">
-                                        <Label icon={Globe}>{isZh ? "国家/地区" : "Country/Region"}</Label>
-                                        <Select 
-                                            name="country" 
-                                            options={[
-                                                { value: '', label: isZh ? "请选择国家" : "Select Country" },
-                                                ...countries.map(c => ({
-                                                    value: c.code,
-                                                    label: `${c.flag} ${isZh ? c.name_zh : c.name}`
-                                                }))
-                                            ]}
-                                            value={formData.country}
-                                            onChange={handleInputChange}
-                                            className="h-[52px]"
-                                        />
+                                         <Label icon={Globe}>{isZh ? "国家/地区" : "Country/Region"}</Label>
+                                         <div className="relative">
+                                            <div 
+                                                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                                                className={`w-full h-[52px] flex items-center bg-gray-100/50 hover:bg-gray-100/80 focus:bg-white border-none rounded-xl px-4 text-[15px] font-medium text-[#1C1C1E] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.01),0_0_0_2px_rgba(0,122,255,0.1)] outline-none transition-all duration-300 ease-out cursor-pointer ${countryDropdownOpen ? 'bg-white ring-2 ring-blue-500/20' : ''}`}
+                                            >
+                                                {formData.country ? (
+                                                    <div className="flex items-center gap-3">
+                                                        <img 
+                                                            src={`https://flagcdn.com/w20/${formData.country.toLowerCase()}.svg`} 
+                                                            alt="flag" 
+                                                            className="h-5 w-7 rounded-sm shadow-sm object-cover"
+                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                        />
+                                                        <span>{isZh ? countries.find(c => c.code === formData.country)?.name_zh : countries.find(c => c.code === formData.country)?.name}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400/60">{isZh ? "请选择国家" : "Select Country"}</span>
+                                                )}
+                                                <ChevronDown className={`ml-auto transition-transform duration-300 ${countryDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+                                            </div>
+
+                                            {countryDropdownOpen && (
+                                                <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                    {countries.map(c => (
+                                                        <div 
+                                                            key={c.code}
+                                                            onClick={() => {
+                                                                setFormData(prev => ({ ...prev, country: c.code }));
+                                                                setCountryDropdownOpen(false);
+                                                            }}
+                                                            className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
+                                                        >
+                                                            <img 
+                                                                src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.svg`} 
+                                                                alt={c.name} 
+                                                                className="h-5 w-7 rounded-sm shadow-sm object-cover"
+                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                            />
+                                                            <span className="flex-1">{isZh ? c.name_zh : c.name}</span>
+                                                            {formData.country === c.code && <span className="text-blue-500">✓</span>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                         </div>
                                     </InputContainer>
                                 </div>
 
