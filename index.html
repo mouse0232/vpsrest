@@ -609,6 +609,14 @@
                     ? `![${countryData.code}](${countryImgUrl}) ${isZh ? countryData.name_zh : countryData.name}` 
                     : (isZh ? '-' : '-');
 
+                // Handle Telegram Contact Info
+                let contactInfoDisplay = formData.contactInfo || '-';
+                if (formData.contactMethod === 'tg' && formData.contactInfo) {
+                    // Remove leading @ if present
+                    const cleanId = formData.contactInfo.replace(/^@+/, '');
+                    contactInfoDisplay = `[${cleanId}](https://t.me/${cleanId})`;
+                }
+
                 const mdContent = `# ${isZh ? 'VPS 剩余价值评估报告' : 'VPS Residual Value Assessment Report'}
 
 ## ${isZh ? '基本信息' : 'Basic Info'}
@@ -618,7 +626,7 @@
 ## ${isZh ? '配置' : 'Configuration'}
 - ${isZh ? 'CPU' : 'CPU'}: ${formData.cores || '-'} C
 - ${isZh ? '内存' : 'RAM'}: ${formData.memory || '-'} ${formData.memoryUnit}
-- ${isZh ? '硬盘' : 'Storage'}: ${formData.storage || '-'} ${formData.storageUnit} SSD
+- ${isZh ? '硬盘' : 'Storage'}: ${formData.storage || '-'} ${formData.storageUnit} DISK
 
 ## ${isZh ? '网络' : 'Network'}
 - ${isZh ? '带宽' : 'Bandwidth'}: ${formData.bandwidth || '-'} ${formData.bandwidthUnit}
@@ -635,7 +643,7 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
 
 ## ${isZh ? '联系方式' : 'Contact'}
 - ${isZh ? '方式' : 'Method'}: ${contactMethodLabel}
-- ${isZh ? 'ID' : 'ID'}: ${formData.contactInfo || '-'}
+- ${isZh ? 'ID' : 'ID'}: ${contactInfoDisplay}
 
 ## ${isZh ? '测评报告' : 'Review'}
 - ${isZh ? '网址' : 'URL'}: ${formData.reviewUrl || '-'}
@@ -1066,7 +1074,7 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                             <g transform="translate(100, 200)">
                                 <text x="0" y="0" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.configuration}</text>
                                 <text x="0" y="25" fontFamily="Inter, sans-serif" fontSize="18" fill="#333">
-                                    {formData.cores || '-'} C / {formData.memory || '-'}{formData.memoryUnit} RAM / {formData.storage || '-'}{formData.storageUnit} SSD
+                                    {formData.cores || '-'} C / {formData.memory || '-'}{formData.memoryUnit} RAM / {formData.storage || '-'}{formData.storageUnit} DISK
                                 </text>
                                 
                                 <text x="0" y="60" fontFamily="Inter, sans-serif" fontSize="12" fontWeight="bold" fill="#AAA" letterSpacing="1">{labels.network}</text>
