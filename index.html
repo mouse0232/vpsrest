@@ -328,8 +328,9 @@
             const [loadingRate, setLoadingRate] = useState(false);
             const [error, setError] = useState('');
             const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
-            const [countries, setCountries] = useState([]);
-            const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+const [countries, setCountries] = useState([]);
+const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+const [countrySearch, setCountrySearch] = useState('');
             const svgRef = useRef(null);
             const qrContainerRef = useRef(null);
 
@@ -725,33 +726,54 @@ ${formData.premium ? `- ${isZh ? '溢价' : 'Premium'}: ${formData.premium} ${fo
                                             </div>
 
                                             {countryDropdownOpen && (
-                                                <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-[300px] overflow-y-auto custom-scrollbar">
-                                                    {countries.map(c => (
-                                                        <div 
-                                                            key={c.code}
-                                                            onClick={() => {
-                                                                setFormData(prev => ({ ...prev, country: c.code }));
-                                                                setCountryDropdownOpen(false);
-                                                            }}
-                                                            className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
-                                                        >
-                                                            <img 
-                                                                src={`https://flagcdn.com/${c.code.toLowerCase()}.svg`} 
-                                                                alt={c.name} 
-                                                                loading="lazy"
-                                                                className="h-4 w-6 rounded-sm shadow-sm object-cover opacity-0 transition-opacity duration-300 flex-shrink-0"
-                                                                onLoad={(e) => e.target.style.opacity = 1}
-                                                                onError={(e) => { 
-                                                                    e.target.style.display = 'none'; 
-                                                                    const fallback = e.target.parentElement.querySelector('.flag-fallback');
-                                                                    if (fallback) fallback.style.display = 'inline';
-                                                                }}
-                                                            />
-                                                            <span className="flag-fallback hidden text-[10px] font-bold text-gray-400 w-6 text-center">{c.code}</span>
-                                                            <span className="flex-1 text-[15px]">{isZh ? c.name_zh : c.name}</span>
-                                                            {formData.country === c.code && <span className="text-blue-500 text-sm">✓</span>}
-                                                        </div>
-                                                    ))}
+                                                <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-[300px] overflow-hidden">
+                                                    <div className="sticky top-0 z-10 bg-white border-b border-gray-100 p-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder={isZh ? "搜索国家..." : "Search country..."}
+                                                            value={countrySearch}
+                                                            onChange={(e) => setCountrySearch(e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <div className="overflow-y-auto max-h-[248px] custom-scrollbar">
+                                                        {countries
+                                                            .filter(c => {
+                                                                if (!countrySearch) return true;
+                                                                const search = countrySearch.toLowerCase();
+                                                                return c.name.toLowerCase().includes(search) || 
+                                                                       c.name_zh.includes(search) || 
+                                                                       c.code.toLowerCase().includes(search);
+                                                            })
+                                                            .map(c => (
+                                                                <div 
+                                                                    key={c.code}
+                                                                    onClick={() => {
+                                                                        setFormData(prev => ({ ...prev, country: c.code }));
+                                                                        setCountryDropdownOpen(false);
+                                                                        setCountrySearch('');
+                                                                    }}
+                                                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.country === c.code ? 'bg-blue-50' : ''}`}
+                                                                >
+                                                                    <img 
+                                                                        src={`https://flagcdn.com/${c.code.toLowerCase()}.svg`} 
+                                                                        alt={c.name} 
+                                                                        loading="lazy"
+                                                                        className="h-4 w-6 rounded-sm shadow-sm object-cover opacity-0 transition-opacity duration-300 flex-shrink-0"
+                                                                        onLoad={(e) => e.target.style.opacity = 1}
+                                                                        onError={(e) => { 
+                                                                            e.target.style.display = 'none'; 
+                                                                            const fallback = e.target.parentElement.querySelector('.flag-fallback');
+                                                                            if (fallback) fallback.style.display = 'inline';
+                                                                        }}
+                                                                    />
+                                                                    <span className="flag-fallback hidden text-[10px] font-bold text-gray-400 w-6 text-center">{c.code}</span>
+                                                                    <span className="flex-1 text-[15px]">{isZh ? c.name_zh : c.name}</span>
+                                                                    {formData.country === c.code && <span className="text-blue-500 text-sm">✓</span>}
+                                                                </div>
+                                                            ))}
+                                                    </div>
                                                 </div>
                                             )}
                                          </div>
